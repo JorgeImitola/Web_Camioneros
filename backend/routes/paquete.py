@@ -2,9 +2,9 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from fastapi import APIRouter, HTTPException, status
-from typing import List
+from typing import List, Dict, Any
 from models import PaqueteBase, PaqueteUpdate
-from db import paquetes_collection
+from db import paquetes_collection, camioneros_collection
 from datetime import datetime
 
 router = APIRouter(prefix="/paquetes", tags=["Paquetes"])
@@ -46,21 +46,22 @@ async def actualizar_paquete(codigo: str, update_data: PaqueteUpdate):
     
     paquete_actualizado = await paquetes_collection.find_one({"_id": codigo})
     return {"mensaje": "Paquete actualizado", "paquete": paquete_actualizado}
-#Consulta1
-#Cantidad de paquetes por camionero
-@router.get("/camionero/{rfc}")
-async def paquetes_por_camionero(rfc: str):
-    paquetes = []
-   
-    async for paquete in paquetes_collection.find({"camionero_asignado": rfc}):
-        paquetes.append(paquete)
-    total_paquetes = len(paquetes)
-    return {
-        "mensaje": f"Paquetes encontrados para el camionero {rfc}",
-        "total_paquetes": total_paquetes,
-        "paquetes": paquetes
-    }
-     
+
+#Asignar camionero a paquete
+@router.post("/Asignar camionero a paquete/{camionero_id}/{paquete_id}", )
+async def asignar_paquete(camionero_id: str, paquete_id: str):
+    camionero = await camioneros_collection.find_one({"_id": camionero_id})
+    if not camionero:
+        raise HTTPException(status_code=404, detail="Camionero no encontrado")
+    
+    paquete = await paquetes_collection.find_one({"_id": paquete_id})
+    if not paquete:
+        raise HTTPException(status_code=404, detail="Paquete no encontrado")
+    
+    # Asignar el paquete al camionero
+    paquete=await paquetes_collection.update_one({"_id": paquete_id}, {"$set": {"camionero_asignado": camionero_id}})
+    paquete = await paquetes_collection.find_one({"_id": paquete_id})
+    return {"mensaje": "Paquete asignado correctamente", "Paquete": paquete}   
     return {"mensaje": "Paquetes encontrados", "paquetes": paquetes}
 @router.get("/camionero/total")
 async def total_paquetes():
