@@ -56,7 +56,6 @@ class PaqueteBase(BaseModel):
     dir_destinatario: str
     camionero_asignado: str
     ciudad_destino: str
-    ciudad_destino: str
  #   fecha_entrega: Optional[datetime] = None
 
 class PaqueteUpdate(BaseModel):

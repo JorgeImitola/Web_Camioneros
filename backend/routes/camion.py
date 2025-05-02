@@ -1,104 +1,128 @@
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))# importar models y db desde la carpeta padre
-from fastapi import APIRouter, HTTPException,status
+from fastapi import APIRouter, HTTPException, status, Request, Form
+from fastapi.responses import HTMLResponse, RedirectResponse
 from typing import List, Dict, Any
-from models import CamionBase , CamionUpdate # <--- importar los modelos de datos
+from models import CamionBase, CamionUpdate
 from db import camiones_collection, camioneros_collection
-
+from bson import ObjectId
+from fastapi.templating import Jinja2Templates
 
 router = APIRouter(prefix="/camiones", tags=["Camiones"])
-#LISTAR CAMIONES
-@router.get("/", response_model=List[CamionBase])
-async def listar_camiones():
+templates = Jinja2Templates(directory="templates")
+
+@router.get("/", response_class=HTMLResponse)
+async def listar_camiones(request: Request):
     camiones = []
     async for camion in camiones_collection.find():
-        camiones.append(camion)
-    return camiones
-
-# OBTENER CAMIÓN POR ID
-@router.get("/{camion_id}")
-async def obtener_camion(camion_id: str):
-    camion = await camiones_collection.find_one({"_id": camion.id})
-    if not camion:
-        raise HTTPException(status_code=404, detail="Camión no encontrado")
-    return {
-        "mensaje": "Camión encontrado",
-        "camion": camion
-    }
-
-
-# CREAR CAMIÓN
-@router.post("/")
-async def crear_camion(camion: CamionBase):
-    # Revisa si ya existe
-    camion_existente = await camiones_collection.find_one({"_id": camion.id})
-    if camion_existente:
-        raise HTTPException(status_code=400, detail="El camión ya existe")
+        # Obtener nombres de conductores
+        conductores_info = []
+        for conductor_id in camion.get("conductores", []):
+            conductor = await camioneros_collection.find_one({"_id": conductor_id})
+            if conductor:
+                conductores_info.append(conductor.get("nombre", conductor_id))
+        
+        camiones.append({
+            "_id": str(camion["_id"]),
+            "placa": camion.get("placa", ""),
+            "modelo": camion.get("modelo", ""),
+            "tipo": camion.get("tipo", ""),
+            "potencia": camion.get("potencia", ""),
+            "conductores": ", ".join(conductores_info) if conductores_info else "Ninguno"
+        })
     
-    # Convertir el modelo a diccionario con "_id"
-    camion_dict = camion.model_dump(by_alias=True)
+    return templates.TemplateResponse("camiones.html", {
+        "request": request,
+        "camiones": camiones
+    })
 
-    # Insertar usando "_id" como clave
-    await camiones_collection.insert_one(camion_dict)
-
-    return {
-        "mensaje": "Camión creado",
-        "camion": camion
-    }
-
-    
- 
-# ACTUALIZAR CAMIÓN
-@router.put("/{camion_id}")
-async def actualizar_camion(
-    camion_id: str,
-    update_data: CamionUpdate,
+@router.post("/crear", response_class=RedirectResponse)
+async def crear_camion(
+    placa: str = Form(...),
+    modelo: str = Form(...),
+    tipo: str = Form(...),
+    potencia: str = Form(...)
 ):
-    """
-    Parámetros:
-        camion_id: ID del camión a actualizar (string)
-        update_data: Campos a actualizar (modelo, tipo, potencia, conductores)
-    """
-    # Verificar si el camión existe
-    camion_existente = await camiones_collection.find_one({"_id": camion_id})
-    if not camion_existente:
+    # Verificar si la placa ya existe
+    if await camiones_collection.find_one({"placa": placa}):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ya existe un camión con esta placa"
+        )
+    
+    nuevo_camion = {
+        "placa": placa,
+        "modelo": modelo,
+        "tipo": tipo,
+        "potencia": potencia,
+        "conductores": []
+    }
+    
+    await camiones_collection.insert_one(nuevo_camion)
+    return RedirectResponse(url="/camiones", status_code=303)
+
+@router.post("/editar/{camion_id}", response_class=RedirectResponse)
+async def editar_camion(
+    camion_id: str,
+    placa: str = Form(...),
+    modelo: str = Form(...),
+    tipo: str = Form(...),
+    potencia: str = Form(...)
+):
+    # Verificar que el camión existe
+    camion = await camiones_collection.find_one({"_id": ObjectId(camion_id)})
+    if not camion:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Camion con ID {camion_id} no encontrado"
+            detail="Camión no encontrado"
         )
-    print(update_data)
-    # Preparar datos de actualización (excluyendo campos no enviados)
-    update_values = {k: v for k, v in update_data.model_dump().items() if v is not None}
     
-    # Actualizar en la base de datos
-    result = await camiones_collection.update_one(
-        {"_id": camion_id},
-        {"$set": update_values}
+    # Verificar si la nueva placa ya existe (excepto para este camión)
+    if placa != camion.get("placa", ""):
+        if await camiones_collection.find_one({"placa": placa, "_id": {"$ne": ObjectId(camion_id)}}):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Ya existe otro camión con esta placa"
+            )
+    
+    # Actualizar el camión
+    await camiones_collection.update_one(
+        {"_id": ObjectId(camion_id)},
+        {"$set": {
+            "placa": placa,
+            "modelo": modelo,
+            "tipo": tipo,
+            "potencia": potencia
+        }}
     )
     
-    # Obtener y devolver el camión actualizado
-    camion_actualizado = await camiones_collection.find_one({"_id": camion_id})
-    
-    return {
-        "mensaje": "Camión actualizado correctamente",
-        "camion": camion_actualizado
-    }
+    return RedirectResponse(url="/camiones", status_code=303)
 
-# Metodo para eliminar camiones
-@router.delete("/{camion_id}")
+@router.post("/eliminar/{camion_id}", response_class=RedirectResponse)
 async def eliminar_camion(camion_id: str):
-    camion = await camiones_collection.find_one({"_id": camion_id})
+    # Verificar que el camión existe
+    camion = await camiones_collection.find_one({"_id": ObjectId(camion_id)})
     if not camion:
-        raise HTTPException(status_code=404, detail="Camión no encontrado")
-
-    # Eliminar el camión
-    await camiones_collection.delete_one({"_id": camion_id})
-
-    # Eliminar el camión en la lista de camiones_asignados de los camioneros
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Camión no encontrado"
+        )
+    
+    # Eliminar referencias en camioneros
     await camioneros_collection.update_many(
-        {"camiones_asignados": camion_id},
-        {"$pull": {"camiones_asignados": camion_id}}
+        {"camiones_asignados": camion["placa"]},
+        {"$pull": {"camiones_asignados": camion["placa"]}}
     )
+    
+    # Eliminar el camión
+    await camiones_collection.delete_one({"_id": ObjectId(camion_id)})
+    
+    return RedirectResponse(url="/camiones", status_code=303)
 
-    return {"mensaje": f"Camión {camion_id} eliminado correctamente y referencias en camioneros actualizadas."}
+@router.get("/disponibles", response_model=List[Dict[str, Any]])
+async def listar_camiones_disponibles():
+    camiones = []
+    async for camion in camiones_collection.find({}, {"placa": 1, "modelo": 1}):
+        camiones.append({
+            "placa": camion["placa"],
+            "modelo": camion.get("modelo", "")
+        })
+    return camiones

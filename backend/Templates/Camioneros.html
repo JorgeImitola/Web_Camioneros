@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camioneros - Sistema de Transporte</title>
+    <style>
+        /* (Aquí va TODO tu CSS actual sin cambios, lo omito por espacio, puedes pegarlo completo) */
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="menu-button" id="menuButton">
+            <span class="menu-bar"></span>
+            <span class="menu-bar"></span>
+            <span class="menu-bar"></span>
+        </button>
+        <a href="/" class="nav-button">Inicio</a>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar" id="sidebar">
+            <a href="/Camioneros" class="sidebar-button active">Camioneros</a>
+            <a href="/Camiones" class="sidebar-button">Camiones</a>
+            <a href="/Ciudades" class="sidebar-button">Ciudades</a>
+            <a href="/Paquetes" class="sidebar-button">Paquetes</a>
+            <a href="/consultas" class="sidebar-button">Consultas</a>
+        </div>
+
+        <div class="content">
+            <h1 class="page-title">Camioneros</h1>
+
+            <button class="add-button" id="addButton">Agregar Camionero</button>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>RFC</th>
+                            <th>Nombre</th>
+                            <th>Teléfono</th>
+                            <th>Dirección</th>
+                            <th>Salario</th>
+                            <th>Población</th>
+                            <th>Camiones Asignados</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for camionero in Camioneros %}
+                        <tr>
+                            <td>{{ camionero._id }}</td>
+                            <td>{{ camionero.nombre }}</td>
+                            <td>{{ camionero.telefono }}</td>
+                            <td>{{ camionero.direccion }}</td>
+                            <td>${{ "%.2f"|format(camionero.salario) if camionero.salario else '0.00' }}</td>
+                            <td>{{ camionero.poblacion }}</td>
+                            <td>{{ camionero.camiones_asignados }}</td>
+                            <td>
+                                <button class="action-button" onclick="abrirModalEditar(
+                                    '{{ camionero._id }}',
+                                    '{{ camionero.nombre }}',
+                                    '{{ camionero.telefono }}',
+                                    '{{ camionero.direccion }}',
+                                    '{{ camionero.salario }}',
+                                    '{{ camionero.poblacion }}'
+                                )">Editar</button>
+                                <button class="action-button delete" onclick="abrirModalEliminar('{{ camionero._id }}')">Eliminar</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Agregar Camionero -->
+    <div id="modalAgregar" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Agregar Nuevo Camionero</h2>
+                <span class="close" onclick="cerrarModal('modalAgregar')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="formAgregar" method="post" action="/camioneros/agregar">
+                    <div class="form-group">
+                        <label for="rfc">RFC:</label>
+                        <input type="text" id="rfc" name="rfc" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="nombre">Nombre:</label>
+                        <input type="text" id="nombre" name="nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="telefono">Teléfono:</label>
+                        <input type="text" id="telefono" name="telefono" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="direccion">Dirección:</label>
+                        <input type="text" id="direccion" name="direccion" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="salario">Salario:</label>
+                        <input type="number" id="salario" name="salario" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="poblacion">Población:</label>
+                        <input type="text" id="poblacion" name="poblacion">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalAgregar')">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('formAgregar').submit()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Editar Camionero -->
+    <div id="modalEditar" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Editar Camionero</h2>
+                <span class="close" onclick="cerrarModal('modalEditar')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="formEditar" method="post">
+                    <input type="hidden" id="edit_rfc" name="rfc">
+                    <div class="form-group">
+                        <label for="edit_nombre">Nombre:</label>
+                        <input type="text" id="edit_nombre" name="nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_telefono">Teléfono:</label>
+                        <input type="text" id="edit_telefono" name="telefono" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_direccion">Dirección:</label>
+                        <input type="text" id="edit_direccion" name="direccion" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_salario">Salario:</label>
+                        <input type="number" id="edit_salario" name="salario" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_poblacion">Población:</label>
+                        <input type="text" id="edit_poblacion" name="poblacion">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalEditar')">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('formEditar').submit()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Confirmar Eliminación -->
+    <div id="modalEliminar" class="modal">
+        <div class="modal-content" style="width: 30%;">
+            <div class="modal-header">
+                <h2 class="modal-title">Confirmar Eliminación</h2>
+                <span class="close" onclick="cerrarModal('modalEliminar')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar este camionero?</p>
+                <form id="formEliminar" method="post" style="display: none;">
+                    <input type="hidden" id="delete_rfc" name="rfc">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalEliminar')">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="confirmarEliminar()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function abrirModalAgregar() {
+            document.getElementById('formAgregar').reset();
+            mostrarModal('modalAgregar');
+        }
+
+        function abrirModalEditar(rfc, nombre, telefono, direccion, salario, poblacion) {
+            document.getElementById('edit_rfc').value = rfc;
+            document.getElementById('edit_nombre').value = nombre;
+            document.getElementById('edit_telefono').value = telefono;
+            document.getElementById('edit_direccion').value = direccion;
+            document.getElementById('edit_salario').value = salario;
+            document.getElementById('edit_poblacion').value = poblacion || '';
+            document.getElementById('formEditar').action = `/camioneros/editar/${rfc}`;
+            mostrarModal('modalEditar');
+        }
+
+        function abrirModalEliminar(rfc) {
+            document.getElementById('delete_rfc').value = rfc;
+            document.getElementById('formEliminar').action = `/camioneros/eliminar/${rfc}`;
+            mostrarModal('modalEliminar');
+        }
+
+        function mostrarModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function cerrarModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function confirmarEliminar() {
+            document.getElementById('formEliminar').submit();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('addButton').addEventListener('click', abrirModalAgregar);
+            window.addEventListener('click', function(event) {
+                if (event.target.classList.contains('modal')) {
+                    cerrarModal(event.target.id);
+                }
+            });
+        });
+
+        document.querySelectorAll('.modal-content').forEach(modalContent => {
+            modalContent.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        });
+    </script>
+</body>
+</html>
