@@ -173,7 +173,7 @@
 </head>
 <body>
     <div class="header">
-        <button class="menu-button" id="menuButton">
+        <button class="menu-button" id="menuButton" onclick="toggleMenu()">
             <span class="menu-bar"></span>
             <span class="menu-bar"></span>
             <span class="menu-bar"></span>
@@ -184,10 +184,10 @@
     <div class="main-container">
         <div class="sidebar" id="sidebar">
             <a href="/Camioneros" class="sidebar-button">Camioneros</a>
-            <a href="/Cuidades" class="sidebar-button">Ciudades</a>
+            <a href="/Ciudades" class="sidebar-button">Ciudades</a>
             <a href="/Camiones" class="sidebar-button">Camiones</a>
             <a href="/Paquetes" class="sidebar-button">Paquetes</a>
-            <a href="7Consultas" class="sidebar-button">Consultas</a>
+            <a href="/Consultas" class="sidebar-button">Consultas</a>
         </div>
         
         <div class="content">
@@ -214,23 +214,14 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        // Función para mostrar/ocultar el menú lateral
+        function toggleMenu() {
             const menuButton = document.getElementById('menuButton');
             const sidebar = document.getElementById('sidebar');
             
-            menuButton.addEventListener('click', function() {
-                this.classList.toggle('active');
-                sidebar.classList.toggle('visible');
-            });
-            
-            // Cerrar el menú al hacer clic fuera de él
-            document.addEventListener('click', function(event) {
-                if (!sidebar.contains(event.target) && event.target !== menuButton) {
-                    menuButton.classList.remove('active');
-                    sidebar.classList.remove('visible');
-                }
-            });
-        });
+            menuButton.classList.toggle('active');
+            sidebar.classList.toggle('visible');
+        }
     </script>
 </body>
 </html>

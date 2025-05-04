@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Camioneros - Sistema de Transporte</title>
+    <title>Camiones - Sistema de Transporte</title>
     <style>
         * {
             margin: 0;
@@ -182,6 +182,8 @@
             cursor: pointer;
             margin-right: 10px;
             font-weight: bold;
+            text-decoration: none;
+            font-size: 14px;
         }
         
         .action-button.delete {
@@ -339,7 +341,7 @@
 </head>
 <body>
     <div class="header">
-        <button class="menu-button" id="menuButton">
+        <button class="menu-button" id="menuBotton" onclick="toggleMenu()">
             <span class="menu-bar"></span>
             <span class="menu-bar"></span>
             <span class="menu-bar"></span>
@@ -349,59 +351,48 @@
     
     <div class="main-container">
         <div class="sidebar" id="sidebar">
-            <a href="/Camioneros" class="sidebar-button active">Camioneros</a>
-            <a href="/Camiones" class="sidebar-button">Camiones</a>
+            <a href="/Camioneros" class="sidebar-button">Camioneros</a>
             <a href="/Ciudades" class="sidebar-button">Ciudades</a>
+            <a href="/Camiones" class="sidebar-button">Camiones</a>
             <a href="/Paquetes" class="sidebar-button">Paquetes</a>
-            <a href="/consultas" class="sidebar-button">Consultas</a>
+            <a href="/Consultas" class="sidebar-button">Consultas</a>
         </div>
         
         <div class="content">
-            <h1 class="page-title">Camioneros</h1>
+            <h1 class="page-title">Camiones</h1>
             
-            <button class="add-button" id="addButton">Agregar Camionero</button>
+            <button class="add-button" onclick="document.getElementById('modalAgregar').style.display='block'">Agregar Camion</button>
             
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th>RFC</th>
-                            <th>Nombre</th>
-                            <th>Teléfono</th>
-                            <th>Dirección</th>
-                            <th>Salario</th>
-                            <th>Población</th>
-                            <th>Camiones Asignados</th>
+                            <th>ID</th>
+                            <th>Modelo</th>
+                            <th>Tipo</th>
+                            <th>Potencia</th>
+                            <th>Conductores</th>
+
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for camionero in Camioneros %}
+                        {% for camion in Camiones %}
                         <tr>
-                            <td>{{ camionero._id }}</td>
-                            <td>{{ camionero.nombre }}</td>
-                            <td>{{ camionero.telefono }}</td>
-                            <td>{{ camionero.direccion }}</td>
-                            <td>${{ "%.2f"|format(camionero.salario) if camionero.salario else '0.00' }}</td>
-                            <td>{{ camionero.poblacion }}</td>
-                            <td>
-                                {% if camionero.camiones_asignados and camionero.camiones_asignados|length > 0 %}
-                                    {{ camionero.camiones_asignados|join(", ") }}
-                                {% else %}
-                                    Ninguno
-                                {% endif %}
-                            </td>
+                            <td>{{ camion._id }}</td>
+                            <td>{{ camion.modelo }}</td>
+                            <td>{{ camion.tipo }}</td>
+                            <td>{{ camion.potencia }}</td>
+                            <td>{{ camion.conductores_nombres }}</td>
                             <td>
                                 <button class="action-button" onclick="abrirModalEditar(
-                                    '{{ camionero._id }}',
-                                    '{{ camionero.nombre }}',
-                                    '{{ camionero.telefono }}',
-                                    '{{ camionero.direccion }}',
-                                    '{{ camionero.salario }}',
-                                    '{{ camionero.poblacion }}',
-                                    '{{ camionero.camiones_asignados|join(",") if camionero.camiones_asignados else "" }}'
+                                    '{{ camion._id }}',  
+                                    '{{ camion.modelo }}',
+                                    '{{ camion.tipo }}',
+                                    '{{ camion.potencia }}',
+                                    [{% for conductor in camion.get('conductores', []) %}'{{ conductor }}'{% if not loop.last %},{% endif %}{% endfor %}]
                                 )">Editar</button>
-                                <button class="action-button delete" onclick="abrirModalEliminar('{{ camionero._id }}')">Eliminar</button>
+                                <button class="action-button delete" onclick="abrirModalEliminar('{{ camion._id }}')">Eliminar</button>
                             </td>
                         </tr>
                         {% endfor %}
@@ -411,200 +402,124 @@
         </div>
     </div>
 
-    <!-- Modal para Agregar Camionero -->
-    <div id="modalAgregar" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Agregar Nuevo Camionero</h2>
-                <span class="close" onclick="cerrarModal('modalAgregar')">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="formAgregar" method="post" action="/camioneros/agregar">
-                    <div class="form-group">
-                        <label for="rfc">RFC:</label>
-                        <input type="text" id="rfc" name="rfc" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="nombre">Nombre:</label>
-                        <input type="text" id="nombre" name="nombre" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="telefono">Teléfono:</label>
-                        <input type="text" id="telefono" name="telefono" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="direccion">Dirección:</label>
-                        <input type="text" id="direccion" name="direccion" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="salario">Salario:</label>
-                        <input type="number" id="salario" name="salario" step="0.01" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="poblacion">Población:</label>
-                        <input type="text" id="poblacion" name="poblacion">
-                    </div>
-                    <div class="form-group">
-                        <label for="camiones">Asignar Camiones:</label>
-                        <select id="camiones" name="camiones" multiple>
-                            {% for camion in Camiones %}
-                            <option value="{{ camion._id }}">{{ camion._id }} - {{ camion.modelo }}</option>
-                            {% endfor %}
-                        </select>
-                        <small>Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples camiones</small>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalAgregar')">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="document.getElementById('formAgregar').submit()">Guardar</button>
-            </div>
+<!-- Modal para Agregar Camión -->
+<div id="modalAgregar" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Agregar Nuevo Camión</h2>
+            <span class="close" onclick="document.getElementById('modalAgregar').style.display='none'">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="formAgregar" method="post" action="/camiones/agregar">
+                <div class="form-group">
+                    <label for="placa">Placa:</label>
+                    <input type="text" id="placa" name="placa" required>
+                </div>
+                <div class="form-group">
+                    <label for="modelo">Modelo:</label>
+                    <input type="text" id="modelo" name="modelo" required>
+                </div>
+                <div class="form-group">
+                    <label for="tipo">Tipo:</label>
+                    <input type="text" id="tipo" name="tipo" required>
+                </div>
+                <div class="form-group">
+                    <label for="potencia">Potencia:</label>
+                    <input type="text" id="potencia" name="potencia" required>
+                </div>
+                <div class="form-group">
+                    <label for="conductores">Asignar Conductores:</label>
+                    <select id="conductores" name="conductores" multiple>
+                        {% for camionero in Camioneros %}
+                        <option value="{{ camionero._id }}">{{ camionero.nombre }} ({{ camionero._id }})</option>
+                        {% endfor %}
+                    </select>
+                    <small>Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples conductores</small>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalAgregar').style.display='none'">Cancelar</button>
+            <button type="submit" class="btn btn-primary" form="formAgregar">Guardar</button>
         </div>
     </div>
+</div>
 
-    <!-- Modal para Editar Camionero -->
-    <div id="modalEditar" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Editar Camionero</h2>
-                <span class="close" onclick="cerrarModal('modalEditar')">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="formEditar" method="post">
-                    <input type="hidden" id="edit_rfc" name="rfc">
-                    <div class="form-group">
-                        <label for="edit_nombre">Nombre:</label>
-                        <input type="text" id="edit_nombre" name="nombre" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_telefono">Teléfono:</label>
-                        <input type="text" id="edit_telefono" name="telefono" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_direccion">Dirección:</label>
-                        <input type="text" id="edit_direccion" name="direccion" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_salario">Salario:</label>
-                        <input type="number" id="edit_salario" name="salario" step="0.01" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_poblacion">Población:</label>
-                        <input type="text" id="edit_poblacion" name="poblacion">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_camiones">Camiones Asignados:</label>
-                        <select id="edit_camiones" name="camiones" multiple>
-                            {% for camion in Camiones %}
-                            <option value="{{ camion._id }}">{{ camion._id }} - {{ camion.modelo }}</option>
-                            {% endfor %}
-                        </select>
-                        <small>Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples camiones</small>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalEditar')">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="document.getElementById('formEditar').submit()">Guardar Cambios</button>
-            </div>
+<!-- Modal para Editar Camión -->
+<div id="modalEditar" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Editar Camión</h2>
+            <span class="close" onclick="document.getElementById('modalEditar').style.display='none'">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="formEditar" method="post" action="">
+                <input type="hidden" id="edit_id" name="camion_id">
+                <div class="form-group">
+                    <label for="edit_modelo">Modelo:</label>
+                    <input type="text" id="edit_modelo" name="modelo" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_tipo">Tipo:</label>
+                    <input type="text" id="edit_tipo" name="tipo" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_potencia">Potencia:</label>
+                    <input type="text" id="edit_potencia" name="potencia" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_conductores">Conductores Asignados:</label>
+                    <select id="edit_conductores" name="conductores" multiple>
+                        {% for camionero in Camioneros %}
+                        <option value="{{ camionero._id }}">{{ camionero.nombre }} ({{ camionero._id }})</option>
+                        {% endfor %}
+                    </select>
+                    <small>Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples conductores</small>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalEditar').style.display='none'">Cancelar</button>
+            <button type="submit" class="btn btn-primary" form="formEditar">Guardar Cambios</button>
         </div>
     </div>
+</div>
 
-    <!-- Modal para Confirmar Eliminación -->
-    <div id="modalEliminar" class="modal">
-        <div class="modal-content" style="width: 30%;">
-            <div class="modal-header">
-                <h2 class="modal-title">Confirmar Eliminación</h2>
-                <span class="close" onclick="cerrarModal('modalEliminar')">&times;</span>
-            </div>
-            <div class="modal-body">
-                <p>¿Estás seguro de que deseas eliminar este camionero?</p>
-                <form id="formEliminar" method="post" style="display: none;">
-                    <input type="hidden" id="delete_rfc" name="rfc">
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalEliminar')">Cancelar</button>
-                <button type="button" class="btn btn-danger" onclick="confirmarEliminar()">Eliminar</button>
-            </div>
-        </div>
-    </div>
+<script>
+        // Función para mostrar/ocultar el menú lateral
+        function toggleMenu() {
+            const menuButton = document.getElementById("menuBotton");
+            const sidebar = document.getElementById("sidebar");
 
-    <script>
-        // Manejo del menú desplegable
-        document.getElementById('menuButton').addEventListener('click', function() {
-            this.classList.toggle('active');
-            document.getElementById('sidebar').classList.toggle('visible');
-        });
-
-        // Funciones para los modales
-        function abrirModalAgregar() {
-            document.getElementById('formAgregar').reset();
-            document.getElementById('camiones').selectedIndex = -1;
-            mostrarModal('modalAgregar');
+            menuButton.classList.toggle('active');
+            sidebar.classList.toggle('visible');
+            
         }
-
-        function abrirModalEditar(rfc, nombre, telefono, direccion, salario, poblacion, camiones) {
-            document.getElementById('edit_rfc').value = rfc;
-            document.getElementById('edit_nombre').value = nombre;
-            document.getElementById('edit_telefono').value = telefono;
-            document.getElementById('edit_direccion').value = direccion;
-            document.getElementById('edit_salario').value = salario;
-            document.getElementById('edit_poblacion').value = poblacion || '';
+        
+        function abrirModalEditar(placa, modelo, tipo, potencia, conductores) {
+            console.log("Datos recibidos:", {placa, modelo, tipo, potencia, conductores});
+            document.getElementById('edit_id').value = placa;
+            document.getElementById('edit_modelo').value = modelo;
+            document.getElementById('edit_tipo').value = tipo;
+            document.getElementById('edit_potencia').value = potencia; // Corregido de 'potency' a 'potencia'
             
-            // Configurar el formulario de edición
-            document.getElementById('formEditar').action = /camioneros/editar/${rfc};
+            document.getElementById('formEditar').action = `/camiones/editar/${placa}`;
             
-            // Seleccionar camiones asignados
-            const camionesSelect = document.getElementById('edit_camiones');
-            const camionesArray = camiones ? camiones.split(',') : [];
-            
-            for (let i = 0; i < camionesSelect.options.length; i++) {
-                camionesSelect.options[i].selected = camionesArray.includes(camionesSelect.options[i].value);
+            const conductoresSelect = document.getElementById('edit_conductores');
+            if (conductoresSelect) {
+                Array.from(conductoresSelect.options).forEach(option => {
+                    option.selected = conductores.includes(option.value);
+                });
             }
             
-            mostrarModal('modalEditar');
+            document.getElementById('modalEditar').style.display = 'block';
         }
-
-        function abrirModalEliminar(rfc) {
-            document.getElementById('delete_rfc').value = rfc;
-            mostrarModal('modalEliminar');
+        // Función para eliminar
+        function abrirModalEliminar(id) {
+            if (confirm('¿Estás seguro de eliminar este camión?')) {
+                window.location.href = `/camiones/eliminar/${id}`;
+            }
         }
-
-        function mostrarModal(modalId) {
-            document.getElementById(modalId).style.display = 'block';
-            document.body.style.overflow = 'hidden'; // Evita el scroll de la página principal
-        }
-
-        function cerrarModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-            document.body.style.overflow = 'auto'; // Restaura el scroll de la página principal
-        }
-
-        function confirmarEliminar() {
-            const rfc = document.getElementById('delete_rfc').value;
-            document.getElementById('formEliminar').action = /camioneros/eliminar/${rfc};
-            document.getElementById('formEliminar').submit();
-        }
-
-        // Configurar botones
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('addButton').addEventListener('click', abrirModalAgregar);
-            
-            // Cerrar modal al hacer clic fuera del contenido
-            window.addEventListener('click', function(event) {
-                if (event.target.classList.contains('modal')) {
-                    cerrarModal(event.target.id);
-                }
-            });
-        });
-
-        // Evitar que el modal se cierre al hacer clic dentro del contenido
-        document.querySelectorAll('.modal-content').forEach(modalContent => {
-            modalContent.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
-        });
-    </script>
+</script>
 </body>
 </html>

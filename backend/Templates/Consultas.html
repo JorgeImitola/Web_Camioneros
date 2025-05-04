@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultas - Sistema de Transporte</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+        }
+        
+        .header {
+            height: 75px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            background-color: white;
+            border-bottom: 1px solid #eee;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .menu-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 5px 0;
+        }
+        
+        .menu-bar {
+            height: 3px;
+            width: 100%;
+            background-color: #333;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+        
+        .menu-button.active .menu-bar:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+        
+        .menu-button.active .menu-bar:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .menu-button.active .menu-bar:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+        
+        .nav-button {
+            background: none;
+            border: none;
+            color: #FFDB99;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            text-decoration: none;
+        }
+        
+        .nav-button:hover {
+            background-color: rgba(255, 219, 153, 0.1);
+        }
+        
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .sidebar {
+            width: 150px;
+            background-color: #FFDB99;
+            transform: translateX(-150px);
+            transition: transform 0.3s ease;
+            position: relative;
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar.visible {
+            transform: translateX(0);
+        }
+        
+        .sidebar-button {
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            color: #333;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .sidebar-button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        
+        .page-title {
+            color: #FFB84D;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .query-button {
+            background-color: #FFDB99;
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            margin: 0 10px 15px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .query-button:hover {
+            background-color: #FFB84D;
+        }
+        
+        .query-button.active {
+            background-color: #FFB84D;
+        }
+        
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+        }
+        
+        th {
+            background-color: #FFDB99;
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .query-buttons-container {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        
+        .loading-message {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .error-message {
+            text-align: center;
+            padding: 20px;
+            color: #ff6b6b;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                max-width: none;
+                height: auto;
+                transform: translateY(-100%);
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 10px;
+            }
+            
+            .sidebar.visible {
+                transform: translateY(0);
+            }
+            
+            .sidebar-button {
+                white-space: nowrap;
+                padding: 10px 15px;
+            }
+            
+            .query-buttons-container {
+                flex-direction: column;
+            }
+            
+            .query-button {
+                margin: 5px 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="menu-button" id="menuButton" onclick="toggleMenu()">
+            <span class="menu-bar"></span>
+            <span class="menu-bar"></span>
+            <span class="menu-bar"></span>
+        </button>
+        <a href="/" class="nav-button">Inicio</a>
+    </div>
+    
+    <div class="main-container">
+        <div class="sidebar" id="sidebar">
+            <a href="/Camioneros" class="sidebar-button">Camioneros</a>
+            <a href="/Camiones" class="sidebar-button">Camiones</a>
+            <a href="/Ciudades" class="sidebar-button">Cuidades</a>
+            <a href="/Paquetes" class="sidebar-button">Paquetes</a>
+            <a href="/consultas" class="sidebar-button active">Consultas</a>
+        </div>
+        
+        <div class="content">
+            <h1 class="page-title">Consultas</h1>
+            
+            <div class="query-buttons-container">
+                <button class="query-button active" onclick="cargarConsulta('camioneros-paquetes', this)">
+                    Camioneros y Paquetes
+                </button>
+                <button class="query-button" onclick="cargarConsulta('camioneros-camiones', this)">
+                    Camioneros y Camiones
+                </button>
+                <button class="query-button" onclick="cargarConsulta('detalle-entregas', this)">
+                    Detalle de Entregas
+                </button>
+                <button class="query-button" onclick="cargarConsulta('ciudades-sin-paquetes', this)">
+                    Ciudades sin Paquetes
+                </button>
+            </div>
+            
+            <div class="table-container">
+                <table id="resultTable">
+                    <thead id="tableHeader">
+                        <!-- Encabezados dinámicos -->
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Resultados dinámicos -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Función para mostrar/ocultar el menú lateral
+        function toggleMenu() {
+            const menuButton = document.getElementById('menuButton');
+            const sidebar = document.getElementById('sidebar');
+            menuButton.classList.toggle('active');
+            sidebar.classList.toggle('visible');
+        }
+
+        // Función para cargar consultas
+        async function cargarConsulta(tipoConsulta, button) {
+            // Actualizar botón activo
+            document.querySelectorAll('.query-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            if (button) button.classList.add('active');
+            
+            const tableHeader = document.getElementById('tableHeader');
+            const tableBody = document.getElementById('tableBody');
+            
+            // Mostrar estado de carga
+            tableHeader.innerHTML = '';
+            tableBody.innerHTML = '<tr><td colspan="100%" class="loading-message">Cargando resultados...</td></tr>';
+            
+            try {
+                const response = await fetch(`/consultas/${tipoConsulta}`);
+                if (!response.ok) throw new Error('Error en la respuesta del servidor');
+                
+                const data = await response.json();
+                
+                // Limpiar tabla
+                tableHeader.innerHTML = '';
+                tableBody.innerHTML = '';
+                
+                if (!data || data.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="100%" class="loading-message">No se encontraron resultados</td></tr>';
+                    return;
+                }
+                
+                // Crear encabezados
+                const headers = Object.keys(data[0]);
+                const headerRow = document.createElement('tr');
+                
+                headers.forEach(header => {
+                    const th = document.createElement('th');
+                    th.textContent = header;
+                    headerRow.appendChild(th);
+                });
+                
+                tableHeader.appendChild(headerRow);
+                
+                // Llenar datos
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    
+                    headers.forEach(header => {
+                        const td = document.createElement('td');
+                        // Manejar el campo de camiones asignados de forma especial
+                        if (header === 'Camiones Asignados' && Array.isArray(item[header])) {
+                            const ul = document.createElement('ul');
+                            item[header].forEach(camion => {
+                                const li = document.createElement('li');
+                                li.textContent = `${camion.placa} (${camion.modelo})`;
+                                ul.appendChild(li);
+                            });
+                            td.appendChild(ul);
+                        } else {
+                            // Mostrar el valor o cadena vacía si es nulo
+                            td.textContent = item[header] !== null && item[header] !== undefined ? item[header] : '';
+                        }
+                        row.appendChild(td);
+                    });
+                    
+                    tableBody.appendChild(row);
+                });
+                
+            } catch (error) {
+                console.error('Error al cargar la consulta:', error);
+                tableBody.innerHTML = '<tr><td colspan="100%" class="error-message">Error al cargar los datos: ' + error.message + '</td></tr>';
+            }
+        }
+
+        // Cargar primera consulta al iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarConsulta('camioneros-paquetes');
+        });
+    </script>
+</body>
+</html>

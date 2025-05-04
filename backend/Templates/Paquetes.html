@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paquetes - Sistema de Transporte</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+        }
+        
+        .header {
+            height: 75px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            background-color: white;
+            border-bottom: 1px solid #eee;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .menu-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 5px 0;
+        }
+        
+        .menu-bar {
+            height: 3px;
+            width: 100%;
+            background-color: #333;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+        
+        .menu-button.active .menu-bar:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+        
+        .menu-button.active .menu-bar:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .menu-button.active .menu-bar:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+        
+        .nav-button {
+            background: none;
+            border: none;
+            color: #FFDB99;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            text-decoration: none;
+        }
+        
+        .nav-button:hover {
+            background-color: rgba(255, 219, 153, 0.1);
+        }
+        
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .sidebar {
+            width: 150px;
+            background-color: #FFDB99;
+            transform: translateX(-150px);
+            transition: transform 0.3s ease;
+            position: relative;
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar.visible {
+            transform: translateX(0);
+        }
+        
+        .sidebar-button {
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            color: #333;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .sidebar-button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        
+        .page-title {
+            color: #FFB84D;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .add-button {
+            background: none;
+            border: none;
+            color: #FFDB99;
+            padding: 10px 15px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            align-self: flex-start;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background-color: #FFDB99;
+            color: white;
+            font-weight: bold;
+        }
+        
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .action-button {
+            background: none;
+            border: none;
+            color: #FFB84D;
+            cursor: pointer;
+            margin-right: 10px;
+            font-weight: bold;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .action-button.delete {
+            color: #ff6b6b;
+        }
+
+        /* Estilos para los modales */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 8px;
+            width: 50%;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            color: #FFB84D;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input, 
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        select[multiple] {
+            height: 120px;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #eee;
+            text-align: right;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            margin-left: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background-color: #FFDB99;
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: #f0f0f0;
+        }
+
+        .btn-danger {
+            background-color: #ff6b6b;
+            color: white;
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        small {
+            font-size: 12px;
+            color: #777;
+            display: block;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 90%;
+                margin: 10% auto;
+                max-height: 90vh;
+            }
+            
+            .sidebar {
+                width: 100%;
+                max-width: none;
+                height: auto;
+                transform: translateY(-100%);
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 10px;
+            }
+            
+            .sidebar.visible {
+                transform: translateY(0);
+            }
+            
+            .sidebar-button {
+                white-space: nowrap;
+                padding: 10px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="menu-button" id="menuButton" onclick="toggleMenu()">
+            <span class="menu-bar"></span>
+            <span class="menu-bar"></span>
+            <span class="menu-bar"></span>
+        </button>
+        <a href="/" class="nav-button">Inicio</a>
+    </div>
+    
+    <div class="main-container">
+        <div class="sidebar" id="sidebar">
+            <a href="/Camioneros" class="sidebar-button">Camioneros</a>
+            <a href="/Camiones" class="sidebar-button">Camiones</a>
+            <a href="/Ciudades" class="sidebar-button">Cuidades</a>
+            <a href="/Paquetes" class="sidebar-button active">Paquetes</a>
+            <a href="/consultas" class="sidebar-button">Consultas</a>
+        </div>
+        
+        <div class="content">
+            <h1 class="page-title">Paquetes</h1>
+            
+            <button class="add-button" onclick="document.getElementById('modalAgregar').style.display='block'">Agregar Paquete</button>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Descripción</th>
+                            <th>Destino</th>
+                            <th>Dirección destinatario</th>
+                            <th>Camionero asignado</th>
+                            <th>Ciudad de destino</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for paquete in Paquetes %}
+                        <tr>
+                            <td>{{ paquete._id }}</td>
+                            <td>{{ paquete.descripcion }}</td>
+                            <td>{{ paquete.destino }}</td>  <!-- Nombre de la ciudad -->
+                            <td>{{ paquete.dir_destinatario }}</td>
+                            <td>{{ paquete.camionero_asignado }}</td>
+                            <td>{{ paquete.ciudad_destino }}</td>  <!-- ID de la ciudad -->
+                            <td>
+                                <button class="action-button" 
+                                        onclick="abrirModalEditar(
+                                            '{{ paquete._id }}',
+                                            '{{ paquete.descripcion }}',
+                                            '{{ paquete.destino }}',
+                                            '{{ paquete.dir_destinatario }}',
+                                            '{{ paquete.camionero_asignado }}',
+                                            '{{ paquete.ciudad_destino }}'
+                                        )">
+                                    Editar
+                                </button>
+                                <a href="/paquetes/eliminar/{{ paquete._id }}" 
+                                   class="action-button delete" 
+                                   onclick="return confirm('¿Estás seguro de eliminar este paquete?')">
+                                    Eliminar
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+<!-- Modal para Agregar Paquete -->
+<div id="modalAgregar" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Agregar Nuevo Paquete</h2>
+            <span class="close" onclick="document.getElementById('modalAgregar').style.display='none'">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="formAgregar" method="post" action="/paquetes/agregar">
+                <div class="form-group">
+                    <label for="paquete_id">ID Paquete:</label>
+                    <input type="text" id="paquete_id" name="paquete_id" required>
+                </div>
+                <div class="form-group">
+                    <label for="descripcion">Descripción:</label>
+                    <input type="text" id="descripcion" name="descripcion" required>
+                </div>
+                <div class="form-group">
+                    <label for="destino">Destino:</label>
+                    <select id="destino" name="destino" required>
+                        <option value="">Seleccione una ciudad</option>
+                        {% for ciudad in Ciudades %}
+                        <option value="{{ ciudad.nombre }}">{{ ciudad.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="dir_destinatario">Dirección destinatario:</label>
+                    <input type="text" id="dir_destinatario" name="dir_destinatario" required>
+                </div>
+                <div class="form-group">
+                    <label for="camionero_asignado">Camionero asignado:</label>
+                    <select id="camionero_asignado" name="camionero_asignado" required>
+                        <option value="">Seleccione un camionero</option>
+                        {% for camionero in Camioneros %}
+                        <option value="{{ camionero._id }}">{{ camionero.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="ciudad_destino">Ciudad de destino (ID):</label>
+                    <select id="ciudad_destino" name="ciudad_destino" required>
+                        <option value="">Seleccione una ciudad</option>
+                        {% for ciudad in Ciudades %}
+                        <option value="{{ ciudad._id }}">{{ ciudad._id }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalAgregar').style.display='none'">Cancelar</button>
+            <button type="submit" class="btn btn-primary" form="formAgregar">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Editar Paquete -->
+<div id="modalEditar" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Editar Paquete</h2>
+            <span class="close" onclick="document.getElementById('modalEditar').style.display='none'">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="formEditar" method="post" action="">
+                <input type="hidden" id="edit_id" name="paquete_id">
+                <div class="form-group">
+                    <label for="edit_descripcion">Descripción:</label>
+                    <input type="text" id="edit_descripcion" name="descripcion" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_destino">Destino:</label>
+                    <select id="edit_destino" name="destino" required>
+                        {% for ciudad in Ciudades %}
+                        <option value="{{ ciudad.nombre }}">{{ ciudad.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit_dir_destinatario">Dirección destinatario:</label>
+                    <input type="text" id="edit_dir_destinatario" name="dir_destinatario" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_camionero_asignado">Camionero asignado:</label>
+                    <select id="edit_camionero_asignado" name="camionero_asignado" required>
+                        {% for camionero in Camioneros %}
+                        <option value="{{ camionero._id }}">{{ camionero._id }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit_ciudad_destino">Ciudad de destino (ID):</label>
+                    <select id="edit_ciudad_destino" name="ciudad_destino" required>
+                        {% for ciudad in Ciudades %}
+                        <option value="{{ ciudad._id }}">{{ ciudad._id }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalEditar').style.display='none'">Cancelar</button>
+            <button type="submit" class="btn btn-primary" form="formEditar">Guardar Cambios</button>
+        </div>
+    </div>
+</div>
+    <script>
+        // Función para mostrar/ocultar el menú lateral
+        function toggleMenu() {
+            const menuButton = document.getElementById('menuButton');
+            const sidebar = document.getElementById('sidebar');
+            
+            menuButton.classList.toggle('active');
+            sidebar.classList.toggle('visible');
+        }
+
+        function abrirModalEditar(id, descripcion, destinoNombre, dirDestinatario, camioneroAsignado, ciudadDestinoId) {
+            document.getElementById('edit_id').value = id;
+            document.getElementById('edit_descripcion').value = descripcion;
+            document.getElementById('edit_destino').value = destinoNombre;
+            document.getElementById('edit_dir_destinatario').value = dirDestinatario;
+            document.getElementById('edit_camionero_asignado').value = camioneroAsignado;
+            document.getElementById('edit_ciudad_destino').value = ciudadDestinoId;
+            
+            document.getElementById('formEditar').action = `/paquetes/editar/${id}`;
+            document.getElementById('modalEditar').style.display = 'block';
+        }
+// Configurar eventos cuando el DOM esté cargado
+document.addEventListener('DOMContentLoaded', function() {
+    // Cerrar modal al hacer clic fuera del contenido
+    window.addEventListener('click', function(event) {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+        }
+    });
+
+    // Evitar que el modal se cierre al hacer clic dentro del contenido
+    document.querySelectorAll('.modal-content').forEach(modalContent => {
+        modalContent.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    });
+});
+    </script>
+</body>
+</html>

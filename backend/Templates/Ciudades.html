@@ -135,12 +135,14 @@
         }
         
         .add-button {
-            background: none;
+            background-color: #FFDB99;
             border: none;
-            color: #FFDB99;
+            color: white;
+            padding: 10px 15px;
             cursor: pointer;
             margin-bottom: 20px;
             align-self: flex-start;
+            border-radius: 4px;
             font-weight: bold;
         }
         
@@ -180,6 +182,8 @@
             cursor: pointer;
             margin-right: 10px;
             font-weight: bold;
+            text-decoration: none;
+            font-size: 14px;
         }
         
         .action-button.delete {
@@ -337,7 +341,7 @@
 </head>
 <body>
     <div class="header">
-        <button class="menu-button" id="menuButton">
+        <button class="menu-button" id="menuButton" onclick="toggleMenu()">
             <span class="menu-bar"></span>
             <span class="menu-bar"></span>
             <span class="menu-bar"></span>
@@ -357,7 +361,7 @@
         <div class="content">
             <h1 class="page-title">Ciudades</h1>
             
-            <button class="add-button" id="addButton">Agregar Ciudad</button>
+            <button class="add-button" onclick="document.getElementById('modalAgregar').style.display='block'">Agregar Ciudad</button>
             
             <div class="table-container">
                 <table>
@@ -370,34 +374,28 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Ejemplo de fila de datos -->
+                        {% for ciudad in Ciudades %}
                         <tr>
-                            <td>1</td>
-                            <td>Ciudad de México</td>
-                            <td>01000</td>
+                            <td>{{ ciudad._id }}</td>
+                            <td>{{ ciudad.nombre }}</td>
+                            <td>{{ ciudad.apartado_postal }}</td>
                             <td>
-                                <button class="action-button">Editar</button>
-                                <button class="action-button delete">Eliminar</button>
+                                <button class="action-button" 
+                                        onclick="abrirModalEditar(
+                                            '{{ ciudad._id }}',
+                                            '{{ ciudad.nombre }}',
+                                            '{{ ciudad.apartado_postal }}'
+                                        )">
+                                    Editar
+                                </button>
+                                <a href="/ciudades/eliminar/{{ ciudad._id }}" 
+                                   class="action-button delete" 
+                                   onclick="return confirm('¿Estás seguro de eliminar esta ciudad?')">
+                                    Eliminar
+                                </a>
                             </td>
                         </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>Guadalajara</td>
-                            <td>44100</td>
-                            <td>
-                                <button class="action-button">Editar</button>
-                                <button class="action-button delete">Eliminar</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>3</td>
-                            <td>Monterrey</td>
-                            <td>64000</td>
-                            <td>
-                                <button class="action-button">Editar</button>
-                                <button class="action-button delete">Eliminar</button>
-                            </td>
-                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -409,23 +407,27 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">Agregar Nueva Ciudad</h2>
-                <span class="close" onclick="cerrarModal('modalAgregar')">&times;</span>
+                <span class="close" onclick="document.getElementById('modalAgregar').style.display='none'">&times;</span>
             </div>
             <div class="modal-body">
                 <form id="formAgregar" method="post" action="/ciudades/agregar">
+                    <div class="form-group">
+                        <label for="ciudad_id">ID Ciudad:</label>
+                        <input type="text" id="ciudad_id" name="ciudad_id" required>
+                    </div>
                     <div class="form-group">
                         <label for="nombre">Nombre:</label>
                         <input type="text" id="nombre" name="nombre" required>
                     </div>
                     <div class="form-group">
-                        <label for="codigo_postal">Código Postal:</label>
-                        <input type="text" id="codigo_postal" name="codigo_postal" required>
+                        <label for="apartado_postal">Código Postal:</label>
+                        <input type="text" id="apartado_postal" name="apartado_postal" required>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalAgregar')">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="document.getElementById('formAgregar').submit()">Guardar</button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalAgregar').style.display='none'">Cancelar</button>
+                <button type="submit" class="btn btn-primary" form="formAgregar">Guardar</button>
             </div>
         </div>
     </div>
@@ -435,131 +437,64 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">Editar Ciudad</h2>
-                <span class="close" onclick="cerrarModal('modalEditar')">&times;</span>
+                <span class="close" onclick="document.getElementById('modalEditar').style.display='none'">&times;</span>
             </div>
             <div class="modal-body">
-                <form id="formEditar" method="post">
-                    <input type="hidden" id="edit_id" name="id">
+                <form id="formEditar" method="post" action="">
+                    <input type="hidden" id="edit_id" name="ciudad_id">
                     <div class="form-group">
                         <label for="edit_nombre">Nombre:</label>
                         <input type="text" id="edit_nombre" name="nombre" required>
                     </div>
                     <div class="form-group">
-                        <label for="edit_codigo_postal">Código Postal:</label>
-                        <input type="text" id="edit_codigo_postal" name="codigo_postal" required>
+                        <label for="edit_apartado_postal">Código Postal:</label>
+                        <input type="text" id="edit_apartado_postal" name="apartado_postal" required>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalEditar')">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="document.getElementById('formEditar').submit()">Guardar Cambios</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal para Confirmar Eliminación -->
-    <div id="modalEliminar" class="modal">
-        <div class="modal-content" style="width: 30%;">
-            <div class="modal-header">
-                <h2 class="modal-title">Confirmar Eliminación</h2>
-                <span class="close" onclick="cerrarModal('modalEliminar')">&times;</span>
-            </div>
-            <div class="modal-body">
-                <p>¿Estás seguro de que deseas eliminar esta ciudad?</p>
-                <form id="formEliminar" method="post" style="display: none;">
-                    <input type="hidden" id="delete_id" name="id">
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalEliminar')">Cancelar</button>
-                <button type="button" class="btn btn-danger" onclick="confirmarEliminar()">Eliminar</button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalEditar').style.display='none'">Cancelar</button>
+                <button type="submit" class="btn btn-primary" form="formEditar">Guardar Cambios</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Manejo del menú desplegable
-        document.getElementById('menuButton').addEventListener('click', function() {
-            this.classList.toggle('active');
-            document.getElementById('sidebar').classList.toggle('visible');
-        });
-
-        // Funciones para los modales
-        function abrirModalAgregar() {
-            document.getElementById('formAgregar').reset();
-            mostrarModal('modalAgregar');
+        // Función para mostrar/ocultar el menú lateral
+        function toggleMenu() {
+            const menuButton = document.getElementById('menuButton');
+            const sidebar = document.getElementById('sidebar');
+            
+            menuButton.classList.toggle('active');
+            sidebar.classList.toggle('visible');
         }
 
+        // Función para abrir modal de edición
         function abrirModalEditar(id, nombre, codigoPostal) {
             document.getElementById('edit_id').value = id;
             document.getElementById('edit_nombre').value = nombre;
-            document.getElementById('edit_codigo_postal').value = codigoPostal;
+            document.getElementById('edit_apartado_postal').value = codigoPostal;
             
             // Configurar el formulario de edición
             document.getElementById('formEditar').action = `/ciudades/editar/${id}`;
             
-            mostrarModal('modalEditar');
+            document.getElementById('modalEditar').style.display = 'block';
         }
 
-        function abrirModalEliminar(id) {
-            document.getElementById('delete_id').value = id;
-            mostrarModal('modalEliminar');
-        }
-
-        function mostrarModal(modalId) {
-            document.getElementById(modalId).style.display = 'block';
-            document.body.style.overflow = 'hidden';
-        }
-
-        function cerrarModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-
-        function confirmarEliminar() {
-            const id = document.getElementById('delete_id').value;
-            document.getElementById('formEliminar').action = `/ciudades/eliminar/${id}`;
-            document.getElementById('formEliminar').submit();
-        }
-
-        // Configurar botones
+        // Configurar eventos cuando el DOM esté cargado
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('addButton').addEventListener('click', abrirModalAgregar);
-            
-            // Ejemplo de cómo se configurarían los botones de edición en las filas
-            document.querySelectorAll('.action-button:not(.delete)').forEach(button => {
-                button.addEventListener('click', function() {
-                    const row = this.closest('tr');
-                    const id = row.cells[0].textContent;
-                    const nombre = row.cells[1].textContent;
-                    const codigoPostal = row.cells[2].textContent;
-                    
-                    abrirModalEditar(id, nombre, codigoPostal);
-                });
-            });
-            
-            // Ejemplo de cómo se configurarían los botones de eliminar en las filas
-            document.querySelectorAll('.action-button.delete').forEach(button => {
-                button.addEventListener('click', function() {
-                    const row = this.closest('tr');
-                    const id = row.cells[0].textContent;
-                    
-                    abrirModalEliminar(id);
-                });
-            });
-            
             // Cerrar modal al hacer clic fuera del contenido
             window.addEventListener('click', function(event) {
                 if (event.target.classList.contains('modal')) {
-                    cerrarModal(event.target.id);
+                    event.target.style.display = 'none';
                 }
             });
-        });
 
-        // Evitar que el modal se cierre al hacer clic dentro del contenido
-        document.querySelectorAll('.modal-content').forEach(modalContent => {
-            modalContent.addEventListener('click', function(e) {
-                e.stopPropagation();
+            // Evitar que el modal se cierre al hacer clic dentro del contenido
+            document.querySelectorAll('.modal-content').forEach(modalContent => {
+                modalContent.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
             });
         });
     </script>

@@ -5,19 +5,350 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Camioneros - Sistema de Transporte</title>
     <style>
-        /* (Aquí va TODO tu CSS actual sin cambios, lo omito por espacio, puedes pegarlo completo) */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+        }
+        
+        .header {
+            height: 75px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            background-color: white;
+            border-bottom: 1px solid #eee;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .menu-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 5px 0;
+        }
+        
+        .menu-bar {
+            height: 3px;
+            width: 100%;
+            background-color: #333;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+        
+        .menu-button.active .menu-bar:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+        
+        .menu-button.active .menu-bar:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .menu-button.active .menu-bar:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+        
+        .nav-button {
+            background: none;
+            border: none;
+            color: #FFDB99;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            text-decoration: none;
+        }
+        
+        .nav-button:hover {
+            background-color: rgba(255, 219, 153, 0.1);
+        }
+        
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .sidebar {
+            width: 150px;
+            background-color: #FFDB99;
+            transform: translateX(-150px);
+            transition: transform 0.3s ease;
+            position: relative;
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar.visible {
+            transform: translateX(0);
+        }
+        
+        .sidebar-button {
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            color: #333;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .sidebar-button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        
+        .page-title {
+            color: #FFB84D;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .add-button {
+            background-color: #FFDB99;
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            align-self: flex-start;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background-color: #FFDB99;
+            color: white;
+            font-weight: bold;
+        }
+        
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .action-button {
+            background: none;
+            border: none;
+            color: #FFB84D;
+            cursor: pointer;
+            margin-right: 10px;
+            font-weight: bold;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .action-button.delete {
+            color: #ff6b6b;
+        }
+
+        /* Estilos para los modales */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 8px;
+            width: 50%;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            color: #FFB84D;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input, 
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        select[multiple] {
+            height: 120px;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #eee;
+            text-align: right;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            margin-left: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background-color: #FFDB99;
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: #f0f0f0;
+        }
+
+        .btn-danger {
+            background-color: #ff6b6b;
+            color: white;
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        small {
+            font-size: 12px;
+            color: #777;
+            display: block;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 90%;
+                margin: 10% auto;
+                max-height: 90vh;
+            }
+            
+            .sidebar {
+                width: 100%;
+                max-width: none;
+                height: auto;
+                transform: translateY(-100%);
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 10px;
+            }
+            
+            .sidebar.visible {
+                transform: translateY(0);
+            }
+            
+            .sidebar-button {
+                white-space: nowrap;
+                padding: 10px 15px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <button class="menu-button" id="menuButton">
+        <button class="menu-button" id="menuButton" onclick="toggleMenu()">
             <span class="menu-bar"></span>
             <span class="menu-bar"></span>
             <span class="menu-bar"></span>
         </button>
         <a href="/" class="nav-button">Inicio</a>
     </div>
-
+    
     <div class="main-container">
         <div class="sidebar" id="sidebar">
             <a href="/Camioneros" class="sidebar-button active">Camioneros</a>
@@ -26,12 +357,12 @@
             <a href="/Paquetes" class="sidebar-button">Paquetes</a>
             <a href="/consultas" class="sidebar-button">Consultas</a>
         </div>
-
+        
         <div class="content">
             <h1 class="page-title">Camioneros</h1>
-
-            <button class="add-button" id="addButton">Agregar Camionero</button>
-
+            
+            <button class="add-button" onclick="document.getElementById('modalAgregar').style.display='block'">Agregar Camionero</button>
+            
             <div class="table-container">
                 <table>
                     <thead>
@@ -55,17 +386,31 @@
                             <td>{{ camionero.direccion }}</td>
                             <td>${{ "%.2f"|format(camionero.salario) if camionero.salario else '0.00' }}</td>
                             <td>{{ camionero.poblacion }}</td>
-                            <td>{{ camionero.camiones_asignados }}</td>
                             <td>
-                                <button class="action-button" onclick="abrirModalEditar(
-                                    '{{ camionero._id }}',
-                                    '{{ camionero.nombre }}',
-                                    '{{ camionero.telefono }}',
-                                    '{{ camionero.direccion }}',
-                                    '{{ camionero.salario }}',
-                                    '{{ camionero.poblacion }}'
-                                )">Editar</button>
-                                <button class="action-button delete" onclick="abrirModalEliminar('{{ camionero._id }}')">Eliminar</button>
+                                {% if camionero.camiones_asignados and camionero.camiones_asignados|length > 0 %}
+                                    {{ camionero.camiones_asignados|join(", ") }}
+                                {% else %}
+                                    Ninguno
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="action-button" 
+                                        onclick="prepararEdicion(
+                                            '{{ camionero._id }}',
+                                            '{{ camionero.nombre }}',
+                                            '{{ camionero.telefono }}',
+                                            '{{ camionero.direccion }}',
+                                            '{{ camionero.salario }}',
+                                            '{{ camionero.poblacion }}',
+                                            '{{ camionero.camiones_asignados|join(",") if camionero.camiones_asignados else "" }}'
+                                        )">
+                                    Editar
+                                </button>
+                                <a href="/camioneros/eliminar/{{ camionero._id }}" 
+                                   class="action-button delete" 
+                                   onclick="return confirm('¿Estás seguro de eliminar este camionero?')">
+                                    Eliminar
+                                </a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -80,7 +425,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">Agregar Nuevo Camionero</h2>
-                <span class="close" onclick="cerrarModal('modalAgregar')">&times;</span>
+                <span class="close" onclick="document.getElementById('modalAgregar').style.display='none'">&times;</span>
             </div>
             <div class="modal-body">
                 <form id="formAgregar" method="post" action="/camioneros/agregar">
@@ -106,13 +451,26 @@
                     </div>
                     <div class="form-group">
                         <label for="poblacion">Población:</label>
-                        <input type="text" id="poblacion" name="poblacion">
+                        <select id="poblacion" name="poblacion" required>
+                            {% for poblacion in poblaciones %}
+                            <option value="{{ poblacion._id }}">{{ poblacion._id }} - {{ poblacion.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="camiones">Asignar Camiones:</label>
+                        <select id="camiones" name="camiones" multiple>
+                            {% for camion in Camiones %}
+                            <option value="{{ camion._id }}">{{ camion._id }} - {{ camion.modelo }}</option>
+                            {% endfor %}
+                        </select>
+                        <small>Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples camiones</small>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalAgregar')">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="document.getElementById('formAgregar').submit()">Guardar</button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalAgregar').style.display='none'">Cancelar</button>
+                <button type="submit" class="btn btn-primary" form="formAgregar">Guardar</button>
             </div>
         </div>
     </div>
@@ -122,10 +480,10 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">Editar Camionero</h2>
-                <span class="close" onclick="cerrarModal('modalEditar')">&times;</span>
+                <span class="close" onclick="document.getElementById('modalEditar').style.display='none'">&times;</span>
             </div>
             <div class="modal-body">
-                <form id="formEditar" method="post">
+                <form id="formEditar" method="post" action="/camioneros/editar">
                     <input type="hidden" id="edit_rfc" name="rfc">
                     <div class="form-group">
                         <label for="edit_nombre">Nombre:</label>
@@ -145,13 +503,26 @@
                     </div>
                     <div class="form-group">
                         <label for="edit_poblacion">Población:</label>
-                        <input type="text" id="edit_poblacion" name="poblacion">
+                        <select id="edit_poblacion" name="poblacion" required>
+                            {% for poblacion in poblaciones %}
+                            <option value="{{ poblacion._id }}">{{ poblacion._id }} - {{ poblacion.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_camiones">Camiones Asignados:</label>
+                        <select id="edit_camiones" name="camiones" multiple>
+                            {% for camion in Camiones %}
+                            <option value="{{ camion._id }}">{{ camion._id }} - {{ camion.modelo }}</option>
+                            {% endfor %}
+                        </select>
+                        <small>Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples camiones</small>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalEditar')">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="document.getElementById('formEditar').submit()">Guardar Cambios</button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalEditar').style.display='none'">Cancelar</button>
+                <button type="submit" class="btn btn-primary" form="formEditar">Guardar Cambios</button>
             </div>
         </div>
     </div>
@@ -161,72 +532,80 @@
         <div class="modal-content" style="width: 30%;">
             <div class="modal-header">
                 <h2 class="modal-title">Confirmar Eliminación</h2>
-                <span class="close" onclick="cerrarModal('modalEliminar')">&times;</span>
+                <span class="close" onclick="document.getElementById('modalEliminar').style.display='none'">&times;</span>
             </div>
             <div class="modal-body">
                 <p>¿Estás seguro de que deseas eliminar este camionero?</p>
-                <form id="formEliminar" method="post" style="display: none;">
+                <form id="formEliminar" method="get" action="">
                     <input type="hidden" id="delete_rfc" name="rfc">
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalEliminar')">Cancelar</button>
-                <button type="button" class="btn btn-danger" onclick="confirmarEliminar()">Eliminar</button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalEliminar').style.display='none'">Cancelar</button>
+                <a href="#" id="confirmDelete" class="btn btn-danger">Eliminar</a>
             </div>
         </div>
     </div>
 
     <script>
-        function abrirModalAgregar() {
-            document.getElementById('formAgregar').reset();
-            mostrarModal('modalAgregar');
+        // Función para mostrar/ocultar el menú lateral
+        function toggleMenu() {
+            const menuButton = document.getElementById('menuButton');
+            const sidebar = document.getElementById('sidebar');
+            
+            menuButton.classList.toggle('active');
+            sidebar.classList.toggle('visible');
         }
-
-        function abrirModalEditar(rfc, nombre, telefono, direccion, salario, poblacion) {
+    
+        // Función para preparar el formulario de edición
+        function prepararEdicion(rfc, nombre, telefono, direccion, salario, poblacion, camiones) {
+            // Configurar la acción del formulario con el RFC
+            document.getElementById('formEditar').action = `/camioneros/editar/${rfc}`;
+            
+            // Llenar campos básicos
             document.getElementById('edit_rfc').value = rfc;
             document.getElementById('edit_nombre').value = nombre;
             document.getElementById('edit_telefono').value = telefono;
             document.getElementById('edit_direccion').value = direccion;
             document.getElementById('edit_salario').value = salario;
-            document.getElementById('edit_poblacion').value = poblacion || '';
-            document.getElementById('formEditar').action = `/camioneros/editar/${rfc}`;
-            mostrarModal('modalEditar');
-        }
-
-        function abrirModalEliminar(rfc) {
-            document.getElementById('delete_rfc').value = rfc;
-            document.getElementById('formEliminar').action = `/camioneros/eliminar/${rfc}`;
-            mostrarModal('modalEliminar');
-        }
-
-        function mostrarModal(modalId) {
-            document.getElementById(modalId).style.display = 'block';
-            document.body.style.overflow = 'hidden';
-        }
-
-        function cerrarModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-
-        function confirmarEliminar() {
-            document.getElementById('formEliminar').submit();
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('addButton').addEventListener('click', abrirModalAgregar);
-            window.addEventListener('click', function(event) {
-                if (event.target.classList.contains('modal')) {
-                    cerrarModal(event.target.id);
+            
+            // Seleccionar la población correcta
+            const selectPoblacion = document.getElementById('edit_poblacion');
+            for (let i = 0; i < selectPoblacion.options.length; i++) {
+                if (selectPoblacion.options[i].value === poblacion.trim()) {
+                    selectPoblacion.options[i].selected = true;
+                    break;
                 }
-            });
-        });
-
-        document.querySelectorAll('.modal-content').forEach(modalContent => {
-            modalContent.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
-        });
+            }
+            
+            // Manejar selección múltiple de camiones
+            const selectCamiones = document.getElementById('edit_camiones');
+            for (let i = 0; i < selectCamiones.options.length; i++) {
+                selectCamiones.options[i].selected = false;
+            }
+            
+            if (camiones && camiones.length > 0) {
+                const camionesArray = camiones.split(',');
+                camionesArray.forEach(camionId => {
+                    const id = camionId.trim();
+                    for (let i = 0; i < selectCamiones.options.length; i++) {
+                        if (selectCamiones.options[i].value === id) {
+                            selectCamiones.options[i].selected = true;
+                            break;
+                        }
+                    }
+                });
+            }
+            
+            document.getElementById('modalEditar').style.display = 'block';
+        }
+    
+        // Función para preparar la eliminación
+        function prepararEliminacion(rfc) {
+            document.getElementById('delete_rfc').value = rfc;
+            document.getElementById('confirmDelete').href = `/camioneros/eliminar/${rfc}`;
+            document.getElementById('modalEliminar').style.display = 'block';
+        }
     </script>
 </body>
 </html>
